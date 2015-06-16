@@ -10,6 +10,7 @@ floatsize = 4
 verbose = False
 
 def error(description):
+
 	print description
 	sys.exit()
 
@@ -45,7 +46,11 @@ def arguments(string):
 		transferwords = args[2]
 
 	if verbose:
-		print "[DEBUG: PARSED COMMANDLINE ARGUMENT write: %s ]\n[DEBUG: PARSED COMMANDLINE ARGUMENT translator: %s ]\n[DEBUG: PARSED COMMANDLINE ARGUMENT sourcevectors: %s ]\n[DEBUG: PARSED COMMANDLINE ARGUMENT targetvectors: %s ]\n[DEBUG: PARSED COMMANDLINE ARGUMENT dictionary: %s ]" %(nameout, translator, sourcevectors, targetvectors, transferwords)
+		print "[DEBUG: PARSED COMMANDLINE ARGUMENT write: %s ]" %nameout
+		print "[DEBUG: PARSED COMMANDLINE ARGUMENT translator: %s ]" %translator
+		print "[DEBUG: PARSED COMMANDLINE ARGUMENT sourcevectors: %s ]" %sourcevectors
+		print "[DEBUG: PARSED COMMANDLINE ARGUMENT targetvectors: %s ]" %targetvectors
+		print "[DEBUG: PARSED COMMANDLINE ARGUMENT dictionary: %s ]" transferwords
 
 	return nameout, translator, sourcevectors, targetvectors, transferwords
 
@@ -59,8 +64,10 @@ def dictionary(filename):
 				error("[EXIT: DICTIONARY FORMAT ERROR]")
 			else:
 				trans[match.group(1)] = match.group(2)
+
 	if verbose:
 		print "[DEBUG: TRANSLATION DICTIONARY INITIALIZED BY: %s]" %filename
+
 	return trans
 
 def vectorspace(filename):
@@ -73,20 +80,23 @@ def vectorspace(filename):
 			error("[EXIT: BINARY FORMAT ERROR]")
 		vocabularysize = int(match.group(1))
 		embeddingsize = int(match.group(2))
-
 		sindex = match.start(3) + 1
-		for i in range(vocabularysize / 1000):
+
+		for i in range(vocabularysize):
 			match = entry.match(bytes[sindex: ])
 			if match is None:
 				error("[EXIT: BINARY FORMAT ERROR]")
 			findex = match.start(2) + 1
 			space[match.group(1)] = numpy.fromstring(bytes[sindex + findex: ], dtype = numpy.float32, count = embeddingsize)
 			sindex += findex + embeddingsize * floatsize + 1
+
 	if verbose:
 		print "[DEBUG: VECTOR SPACE INITIALIZED BY: %s]" %filename
+
 	return space, embeddingsize
 
 def traintranslator(source, svectorsize, destination, tvectorsize, dictionary, translator = None, alpha = 0.05):
+
 	translator = numpy.random.rand(tvectorsize, svectorsize) if translator is None else translator
 	for word in dictionary:
 		if word in source and dictionary[word] in destination:
@@ -97,8 +107,10 @@ def traintranslator(source, svectorsize, destination, tvectorsize, dictionary, t
 			delta = numpy.dot(difference, invector.transpose())
 			delta = numpy.multiply(alpha, delta)
 			translator = numpy.subtract(translator, delta)
+
 	if verbose:
 		print "[DEBUG: TRANSLATION MATRIX GENERATED]"
+
 	return translator
 
 if __name__ == '__main__':
@@ -109,6 +121,7 @@ if __name__ == '__main__':
 	dictionary = dictionary(transferwords)
 	translator = None if translatorfile is None else numpy.load(translatorfile, "r+")
 	translator = traintranslator(source, svectorsize, target, tvectorsize, dictionary, translator)
+
 	if nameout is None:
 		print translator
 	else:
