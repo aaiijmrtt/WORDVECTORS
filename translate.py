@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import sys, getopt, re, numpy
 
-usage = "\n\nNAME\n\n\n\tvectors - process monolingual word vectors and bilingual dictionary\n\n\nSYNOPSIS\n\n\n\t./vectors.py [OPTIONS]... <FILE:SRCVEC> <FILE:TGTVEC> <FILE:BIDIC>...\n\n\nDESCRIPTION\n\n\n\tProcess monolingual word vectors and bilingual dictionary. Generate translation matrix. Print to stdout unless write file specified.\n\n\tMandatory arguments to long options are mandatory for short options too.\n\n\nOPTIONS\n\n\t-h, --help\n\t\tdisplay this help and exit\n\n\t-v, --verbose\n\t\tdisplay information for debugging\n\n\t-w, --write=FILE\n\t\taccept file for writing\n\n\t-t, --translator=FILE\n\t\taccept file containing translator matrix\n\n\nARGUMENTS\n\n\tFILE:SRCVEC\n\t\taccept file containing source language word vectors\n\n\tFILE:TGTVEC\n\t\taccept file containing target language word vectors\n\n\tFILE:BIDIC\n\t\taccept file containing dictionary from source to target language\n\n\nAUTHOR\n\n\n\tWritten by Amitrajit Sarkar.\n\n\nREPORTING BUGS\n\n\n\tReport bugs to <aaiijmrtt@gmail.com>.\n\n\nCOPYRIGHT\n\n\nThe MIT License (MIT)\n\nCopyright (c) 2015 Amitrajit Sarkar\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n"
+usage = "\n\nNAME\n\n\n\ttranslate - process monolingual word vectors and bilingual dictionary\n\n\nSYNOPSIS\n\n\n\t./translate.py [OPTIONS]... <FILE:SRCVEC> <FILE:TGTVEC> <FILE:BIDIC>...\n\n\nDESCRIPTION\n\n\n\tProcess monolingual word vectors and bilingual dictionary. Generate translation matrix. Print to stdout unless write file specified.\n\n\tMandatory arguments to long options are mandatory for short options too.\n\n\nOPTIONS\n\n\t-h, --help\n\t\tdisplay this help and exit\n\n\t-v, --verbose\n\t\tdisplay information for debugging\n\n\t-w, --write=FILE\n\t\taccept file for writing\n\n\t-t, --translator=FILE\n\t\taccept file containing translator matrix\n\n\nARGUMENTS\n\n\tFILE:SRCVEC\n\t\taccept file containing source language word vectors\n\n\tFILE:TGTVEC\n\t\taccept file containing target language word vectors\n\n\tFILE:BIDIC\n\t\taccept file containing dictionary from source to target language\n\n\nAUTHOR\n\n\n\tWritten by Amitrajit Sarkar.\n\n\nREPORTING BUGS\n\n\n\tReport bugs to <aaiijmrtt@gmail.com>.\n\n\nCOPYRIGHT\n\n\nThe MIT License (MIT)\n\nCopyright (c) 2015 Amitrajit Sarkar\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n"
 
 head = re.compile("^([^ ]*) ([^\n]*)(\n)")
 entry = re.compile("^([^ ]*)( )")
@@ -46,11 +46,11 @@ def arguments(string):
 		transferwords = args[2]
 
 	if verbose:
-		print "[DEBUG: PARSED COMMANDLINE ARGUMENT write: %s ]" %nameout
-		print "[DEBUG: PARSED COMMANDLINE ARGUMENT translator: %s ]" %translator
-		print "[DEBUG: PARSED COMMANDLINE ARGUMENT sourcevectors: %s ]" %sourcevectors
-		print "[DEBUG: PARSED COMMANDLINE ARGUMENT targetvectors: %s ]" %targetvectors
-		print "[DEBUG: PARSED COMMANDLINE ARGUMENT dictionary: %s ]" transferwords
+		print "[DEBUG: PARSED COMMANDLINE ARGUMENT write: %s]" %nameout
+		print "[DEBUG: PARSED COMMANDLINE ARGUMENT translator: %s]" %translator
+		print "[DEBUG: PARSED COMMANDLINE ARGUMENT sourcevectors: %s]" %sourcevectors
+		print "[DEBUG: PARSED COMMANDLINE ARGUMENT targetvectors: %s]" %targetvectors
+		print "[DEBUG: PARSED COMMANDLINE ARGUMENT dictionary: %s]" %transferwords
 
 	return nameout, translator, sourcevectors, targetvectors, transferwords
 
@@ -63,7 +63,7 @@ def dictionary(filename):
 			if match is None:
 				error("[EXIT: DICTIONARY FORMAT ERROR]")
 			else:
-				trans[match.group(1)] = match.group(2)
+				trans[match.group(1).lower()] = match.group(2).lower()
 
 	if verbose:
 		print "[DEBUG: TRANSLATION DICTIONARY INITIALIZED BY: %s]" %filename
@@ -87,7 +87,7 @@ def vectorspace(filename):
 			if match is None:
 				error("[EXIT: BINARY FORMAT ERROR]")
 			findex = match.start(2) + 1
-			space[match.group(1)] = numpy.fromstring(bytes[sindex + findex: ], dtype = numpy.float32, count = embeddingsize)
+			space[match.group(1).lower()] = numpy.fromstring(bytes[sindex + findex: ], dtype = numpy.float32, count = embeddingsize)
 			sindex += findex + embeddingsize * floatsize + 1
 
 	if verbose:
