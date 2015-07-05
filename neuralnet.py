@@ -1,6 +1,10 @@
 import numpy, math
 
 hadamard = numpy.vectorize(lambda x, y: x * y)
+VECTORIZEDNONLINEARITY = numpy.vectorize(lambda x: 1.0 / (1.0 + math.exp(-x)))
+VECTORIZEDGRADIENT = numpy.vectorize(lambda x, y: x - y)
+VECTORIZEDDERIVATIVE = numpy.vectorize(lambda x: x * (1.0 - x))
+VECTORIZEDCOST = numpy.vectorize(lambda x, y: (x - y) ** 2.0 / 2.0)
 
 def feedforward(weights, inputs, biases, vectorizednonlinearity):
 	return vectorizednonlinearity(numpy.add(numpy.dot(weights, inputs), biases))
@@ -22,8 +26,8 @@ def forwardpass(inputs, weights, biases, vectorizednonlinearity):
 
 def backwardpass(activations, weights, biases, outputs, vectorizedgradient, vectorizedderivative):
 	layers = len(weights)
-	deltaweights = [numpy.zeros(weight.shape, dtype = float) for weight in weights]
-	deltabiases = [numpy.zeros(bias.shape, dtype = float) for bias in biases]
+	deltaweights = [None for i in range(layers)]
+	deltabiases = [None for i in range(layers)]
 	deltas = [None for i in range(layers)]
 	deltas[layers - 1] = deltaoutput(activations[layers], outputs, vectorizedgradient, vectorizedderivative)
 	for i in reversed(range(layers - 1)):
@@ -32,11 +36,8 @@ def backwardpass(activations, weights, biases, outputs, vectorizedgradient, vect
 		deltaweights[i], deltabiases[i] = backpropagate(activations[i], deltas[i])
 	return deltaweights, deltabiases
 
-def train(inputs, outputs, weights, biases, nonlinearity = lambda x: 1.0 / (1.0 + math.exp(-x)), gradient = lambda x, y: x - y, derivative = lambda x: x * (1 - x), alpha = 0.05):
+def train(inputs, outputs, weights, biases, alpha = 0.05, vectorizednonlinearity = VECTORIZEDNONLINEARITY, vectorizedgradient = VECTORIZEDGRADIENT, vectorizedderivative = VECTORIZEDDERIVATIVE):
 	layers = len(weights)
-	vectorizednonlinearity = numpy.vectorize(nonlinearity)
-	vectorizedgradient = numpy.vectorize(gradient)
-	vectorizedderivative = numpy.vectorize(derivative)
 	for vectorsin, vectorsout in zip(inputs, outputs):
 		activations = forwardpass(vectorsin, weights, biases, vectorizednonlinearity)
 		deltaweights, deltabiases = backwardpass(activations, weights, biases, vectorsout, vectorizedgradient, vectorizedderivative)
@@ -45,12 +46,19 @@ def train(inputs, outputs, weights, biases, nonlinearity = lambda x: 1.0 / (1.0 
 			biases[i] = numpy.subtract(biases[i], alpha * deltabiases[i])
 	return weights, biases
 
-def test(inputs, outputs, weights, biases, nonlinearity = lambda x: 1.0 / (1.0 + math.exp(-x)), cost = lambda x, y: (x - y) ** 2.0 / 2.0):
+def test(inputs, outputs, weights, biases, vectorizednonlinearity = VECTORIZEDNONLINEARITY, vectorizedcost = VECTORIZEDCOST):
 	layers = len(weights)
 	costs = 0.0
-	vectorizednonlinearity = numpy.vectorize(nonlinearity)
-	vectorizedcost = numpy.vectorize(cost)
 	for vectorsin, vectorsout in zip(inputs, outputs):
 		activations = forwardpass(vectorsin, weights, biases, vectorizednonlinearity)
 		costs += sum(math.fabs(element) for element in vectorizedcost(activations[layers], vectorsout))
+	return (costs / len(inputs))
+
+def testclassifier(inputs, outputs, weights, biases, vectorizednonlinearity = VECTORIZEDNONLINEARITY):
+	layers = len(weights)
+	costs = 0.0
+	for vectorsin, vectorsout in zip(inputs, outputs):
+		activations = forwardpass(vectorsin, weights, biases, vectorizednonlinearity)
+		classification = numpy.argmax(activations[layers])
+		costs += 0.0 if vectorsout[classification][0] == 1.0 else 1.0
 	return (costs / len(inputs))
