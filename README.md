@@ -7,8 +7,8 @@ exploring deep learning: natural language processing
 
 **Instructions**:
 
-* **Compiling**: $javac -cp stanford-parser.jar APIWrapper.java
-* **Executing**: $java -cp .:stanford-parser.jar:stanford-parser-3.5.2-models.jar APIWrapper in.txt >> out.txt
+* **Compiling**: `$javac -cp stanford-parser.jar APIWrapper.java`
+* **Executing**: `$java -cp .:stanford-parser.jar:stanford-parser-3.5.2-models.jar APIWrapper in.txt >> out.txt`
 
 **Notes**:
 
@@ -24,8 +24,8 @@ exploring deep learning: natural language processing
 
 **Instructions**:
 
-* **Setting Executable Bit**: eg. $chmod +x corpus.py
-* **Browsing Usage**: eg. $./corpus -h
+* **Setting Executable Bit**: eg. `$chmod +x corpus.py`
+* **Browsing Usage**: eg. `$./corpus -h`
 
 **Notes**:
 
@@ -38,7 +38,6 @@ exploring deep learning: natural language processing
 1. **configuration.py**: contains global script configuration variables
 2. **neuralnet.py**: a neural network implementation in numpy
 3. **shiftreducer.py**: a shift reduce dependency parser for neural word embeddings
-4. **graphparser.py**: a maximum spanning tree dependency parser for neural word embeddings
 
 **Notes**:
 

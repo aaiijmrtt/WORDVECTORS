@@ -6,11 +6,6 @@ usage = "\n\nNAME\n\n\n\ttranslate - process monolingual word vectors and biling
 
 VECTORIZEDDISTANCE = scipy.spatial.distance.cosine
 
-def error(description):
-
-	print description
-	sys.exit()
-
 def arguments(string):
 
 	nameout = None
@@ -23,7 +18,7 @@ def arguments(string):
 		opts, args = getopt.getopt(string, "hvw:t:s:i:", ["help", "verbose", "write=", "translator=", "size=", "iterations="])
 		for opt, arg in opts:
 			if opt in ("-h", "--help"):
-				error(usage)
+				configuration.error(usage)
 			elif opt in ("-v", "--verbose"):
 				configuration.verbose = True
 			elif opt in ("-w", "--write"):
@@ -36,10 +31,10 @@ def arguments(string):
 				configuration.iterations = int(arg)
 
 	except Exception:
-		error(usage)
+		configuration.error(usage)
 
 	if len(args) != 3:
-		error(usage)
+		configuration.error(usage)
 
 	sourcevectors = args[0]
 	targetvectors = args[1]
@@ -65,7 +60,7 @@ def dictionary(filename):
 		for line in transfile.readlines():
 			match = configuration.tran.match(line)
 			if match is None:
-				error("[EXIT: DICTIONARY FORMAT ERROR]")
+				configuration.error("[EXIT: DICTIONARY FORMAT ERROR]")
 			else:
 				trans[match.group(1).lower()] = match.group(2).lower()
 			count += 1
@@ -84,7 +79,7 @@ def vectorspace(filename):
 		bytes = vecbin.read()
 		match = configuration.head.match(bytes)
 		if match is None:
-			error("[EXIT: BINARY FORMAT ERROR]")
+			configuration.error("[EXIT: BINARY FORMAT ERROR]")
 		vocabularysize = int(match.group(1))
 		embeddingsize = int(match.group(2))
 		sindex = match.start(3) + 1
@@ -92,7 +87,7 @@ def vectorspace(filename):
 		for i in range(vocabularysize):
 			match = configuration.entry.match(bytes[sindex: sindex + configuration.tokensize])
 			if match is None:
-				error("[EXIT: BINARY FORMAT ERROR]")
+				configuration.error("[EXIT: BINARY FORMAT ERROR]")
 			findex = match.start(2) + 1
 			space[match.group(1).lower()] = numpy.reshape(numpy.fromstring(bytes[sindex + findex: sindex + findex + embeddingsize * configuration.floatsize], dtype = numpy.float32, count = embeddingsize), (embeddingsize, 1))
 			sindex += findex + embeddingsize * configuration.floatsize + 1
@@ -152,6 +147,18 @@ def traintranslator(source, svectorsize, destination, tvectorsize, dictionary, t
 
 	return translator, len(inputs), error
 
+def wordstovectors(words, vectorspace):
+	vectors = [[None for j in range(len(words[i]))] for i in range(len(words))]
+	for i in range(len(words)):
+		for j in range(len(words[i])):
+			if words[i][j] is None:
+				continue
+			elif words[i][j] == "ROOT":
+				vectors[i][j] = vectorspace['</s>']
+			elif words[i][j].lower() in vectorspace:
+				vectors[i][j] = vectorspace[words[i][j].lower()]
+	return vectors
+
 def translatevector(sourcevector, translator, vectorizednonlinearity = neuralnet.VECTORIZEDNONLINEARITY):
 
 	unscaledvector = vectorizednonlinearity(numpy.add(numpy.dot(translator['weights'][0], sourcevector), translator['biases'][0]))
@@ -161,6 +168,16 @@ def translatevector(sourcevector, translator, vectorizednonlinearity = neuralnet
 def translateword(sourceword, sourcespace, translator, targetspace, vectorizednonlinearity = neuralnet.VECTORIZEDNONLINEARITY, vectorizeddistance = VECTORIZEDDISTANCE, neighbourcount = 5):
 
 	return findneighbours(translatevector(sourcespace[sourceword], translator, vectorizednonlinearity), targetspace, vectorizeddistance, neighbourcount)
+
+def translatevectorspace(vectorspace, translator):
+
+	for word in vectorspace:
+		vectorspace[word] = translatevector(vectorspace[word], translator)
+
+	if configuration.verbose:
+		print "[DEBUG: TRANSLATED VECTORSPACE]"
+
+	return vectorspace
 
 def findneighbours(vector, vectorspace, vectorizeddistance = VECTORIZEDDISTANCE, neighbourcount = 5):
 
